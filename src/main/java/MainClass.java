@@ -1,20 +1,36 @@
 import java.util.ArrayList;
 import java.util.Arrays;
 
+import java.util.concurrent.BrokenBarrierException;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.CyclicBarrier;
+
 public class MainClass {
-    public static final int CARS_COUNT = 4;
-    public static void main(String[] args) {
+    static final int CARS_COUNT = 4;
+    static final CountDownLatch countDownLatchFinish = new CountDownLatch(CARS_COUNT);
+    static final CountDownLatch countDownLatchReady = new CountDownLatch(CARS_COUNT);
+    static final CyclicBarrier startBarrier = new CyclicBarrier(CARS_COUNT);
+
+    public static void main(String[] args) throws InterruptedException, BrokenBarrierException {
         System.out.println("ВАЖНОЕ ОБЪЯВЛЕНИЕ >>> Подготовка!!!");
-        Race race = new Race(new Road(60), new Tunnel(), new Road(40));
+        Race race = new Race(new Road(60), new Tunnel(80), new Road(40));
         Car[] cars = new Car[CARS_COUNT];
-        for (int i = 0; i < cars.length; i++) {
-            cars[i] = new Car(race, 20 + (int) (Math.random() * 10));
+        final int THREADS_COUNT = 4;
+        CyclicBarrier cyclicBarrier = new CyclicBarrier(THREADS_COUNT);
+        final int randomSpeed = 20 + (int) (Math.random() * 10);
+        for (int i = 0; i < THREADS_COUNT; i++) {
+
+                try {
+                    new Thread(new Car(race, randomSpeed)).start();
+                    new Thread(new Car(race, randomSpeed)).start();
+                    new Thread(new Car(race, randomSpeed)).start();
+                    new Thread(new Car(race, randomSpeed)).start();
+                    cyclicBarrier.await();
+                } catch (InterruptedException | BrokenBarrierException e) {
+                    e.printStackTrace();
+                }
         }
-        for (int i = 0; i < cars.length; i++) {
-            new Thread(cars[i]).start();
-        }
-        System.out.println("ВАЖНОЕ ОБЪЯВЛЕНИЕ >>> Гонка началась!!!");
-        System.out.println("ВАЖНОЕ ОБЪЯВЛЕНИЕ >>> Гонка закончилась!!!");
     }
 }
+
 
